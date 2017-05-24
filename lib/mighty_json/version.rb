@@ -1,3 +1,3 @@
-module MightyJson
+module MightyJSON
   VERSION = "0.1.0"
 end
