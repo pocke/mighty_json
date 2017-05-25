@@ -1,4 +1,3 @@
-# TODO: def to_s
 module MightyJSON
   module Type
     NONE = Object.new
@@ -81,10 +80,7 @@ module MightyJSON
       end
     end
 
-    # TODO
     class Literal
-      attr_reader :value
-
       def initialize(value)
         @value = value
       end
@@ -93,9 +89,12 @@ module MightyJSON
         "literal(#{@value})"
       end
 
-      def coerce(value, path: [])
-        raise Error.new(path: path, type: self, value: value) unless self.value == value
-        value
+      def compile(var:, path:)
+        v = var.cur
+        <<~END
+          raise Error.new(path: #{path.inspect}, type: #{self.to_s.inspect}, value: #{v}) unless #{@value.inspect} == #{v}
+          #{v}
+        END
       end
     end
 

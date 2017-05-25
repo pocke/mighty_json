@@ -8,7 +8,7 @@ class TestJSON < Minitest::Test
     end
 
     assert do
-      s.checkout.coerce(items: [ { name: "test", count: 1, price: "2.33", comment: "dummy" }], type: 1) == {items: [ { name: "test", count: 1, price: "2.33", comment: "dummy" }], type: 1}
+      s.checkout.coerce(items: [ { name: "test", count: 1, price: "2.33", comment: "dummy" }], type: 1) == {items: [ { name: "test", count: 1, price: "2.33" }], type: 1}
     end
   end
 end
