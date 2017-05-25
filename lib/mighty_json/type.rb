@@ -1,4 +1,3 @@
-# TODO: def to_s
 module MightyJSON
   module Type
     NONE = Object.new
@@ -40,7 +39,7 @@ module MightyJSON
           END
         when :numeric
           <<~END
-            #{v}.is_a?(Numeric) || (#{v}.is_a?(String) && /\A[\-\+]?[\d.]+\Z/ =~ #{v}) ?
+            #{v}.is_a?(Numeric) || (#{v}.is_a?(String) && /\\A[-+]?[\\d.]+\\Z/ =~ #{v}) ?
               #{v} :
               #{err}
           END
@@ -81,10 +80,7 @@ module MightyJSON
       end
     end
 
-    # TODO
     class Literal
-      attr_reader :value
-
       def initialize(value)
         @value = value
       end
@@ -93,9 +89,12 @@ module MightyJSON
         "literal(#{@value})"
       end
 
-      def coerce(value, path: [])
-        raise Error.new(path: path, type: self, value: value) unless self.value == value
-        value
+      def compile(var:, path:)
+        v = var.cur
+        <<~END
+          raise Error.new(path: #{path.inspect}, type: #{self.to_s.inspect}, value: #{v}) unless #{@value.inspect} == #{v}
+          #{v}
+        END
       end
     end
 
@@ -172,7 +171,6 @@ module MightyJSON
       end
     end
 
-    # TODO
     class Enum
       attr_reader :types
 
@@ -180,18 +178,22 @@ module MightyJSON
         @types = types
       end
 
-      def to_s
-        "enum(#{types.map(&:to_s).join(", ")})"
+      def compile(var:, path:)
+        v = var.cur
+        <<~END
+          #{@types.map do |type|
+            <<~END2.chomp
+              begin
+                #{type.compile(var: var, path: path)}
+              rescue Error, UnexpectedFieldError, IllegalTypeError
+              end
+            END2
+          end.join(' || ')} || (raise Error.new(path: #{path.inspect}, type: #{self.to_s.inspect}, value: #{v}))
+        END
       end
 
-      def coerce(value, path: [])
-        type = types.find {|ty| ty =~ value }
-
-        if type
-          type.coerce(value, path: path)
-        else
-          raise Error.new(path: path, type: self, value: value)
-        end
+      def to_s
+        "enum(#{types.map(&:to_s).join(", ")})"
       end
     end
 
