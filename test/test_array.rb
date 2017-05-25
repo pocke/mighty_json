@@ -53,6 +53,12 @@ class TestArray < Minitest::Test
   end
 
   def test_bacon_cannon_op
-    # TODO
+    m = MightyJSON.new do
+      let :test, array(number)
+    end
+
+    assert {(m.test =~ [1]) == true}
+    assert {(m.test =~ []) == true}
+    assert {(m.test =~ ['foo']) == false}
   end
 end

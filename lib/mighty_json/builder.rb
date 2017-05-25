@@ -17,6 +17,20 @@ module MightyJSON
                 var0 = value
                 #{type.compile(var: Variable.new, path: [])}
               end
+
+              def this.=~(value)
+                coerce(value)
+                true
+              rescue Error, IllegalTypeError, UnexpectedFieldError
+                false
+              end
+
+              def this.===(value)
+                coerce(value)
+                true
+              rescue Error, IllegalTypeError, UnexpectedFieldError
+                false
+              end
             END
           end
         end
