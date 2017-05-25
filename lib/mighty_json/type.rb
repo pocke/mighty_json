@@ -75,6 +75,10 @@ module MightyJSON
           end
         END
       end
+
+      def to_s
+        "optinal(#{@type})"
+      end
     end
 
     # TODO
