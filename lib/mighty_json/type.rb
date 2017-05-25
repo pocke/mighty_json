@@ -59,19 +59,18 @@ module MightyJSON
         @type = type
       end
 
-      def coerce(value, path: [])
-        unless value == nil || NONE.equal?(value)
-          @type.coerce(value, path: path)
-        else
-          nil
-        end
-      end
-
-      def to_s
-        "optinal(#{@type})"
+      def compile(var:, path:)
+        <<~END
+          if #{var}.nil? || NONE.equal?(#{var})
+            nil
+          else
+            #{@type.compile(var: var, path: path)}
+          end
+        END
       end
     end
 
+    # TODO
     class Literal
       attr_reader :value
 
