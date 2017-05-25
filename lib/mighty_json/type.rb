@@ -172,7 +172,6 @@ module MightyJSON
       end
     end
 
-    # TODO
     class Enum
       attr_reader :types
 
@@ -180,18 +179,22 @@ module MightyJSON
         @types = types
       end
 
-      def to_s
-        "enum(#{types.map(&:to_s).join(", ")})"
+      def compile(var:, path:)
+        v = var.cur
+        <<~END
+          #{@types.map do |type|
+            <<~END2.chomp
+              begin
+                #{type.compile(var: var, path: path)}
+              rescue Error, UnexpectedFieldError, IllegalTypeError
+              end
+            END2
+          end.join(' || ')} || (raise Error.new(path: #{path.inspect}, type: #{self.to_s.inspect}, value: #{v}))
+        END
       end
 
-      def coerce(value, path: [])
-        type = types.find {|ty| ty =~ value }
-
-        if type
-          type.coerce(value, path: path)
-        else
-          raise Error.new(path: path, type: self, value: value)
-        end
+      def to_s
+        "enum(#{types.map(&:to_s).join(", ")})"
       end
     end
 

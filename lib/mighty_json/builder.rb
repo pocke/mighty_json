@@ -12,10 +12,11 @@ module MightyJSON
       Struct.new(*@lets.keys).new(
         *@lets.values.map do |type|
           Object.new.tap do |this|
+            var = Variable.new
+            v = var.cur
             eval <<~END
-              def this.coerce(value)
-                var0 = value
-                #{type.compile(var: Variable.new, path: [])}
+              def this.coerce(#{v})
+                #{type.compile(var: var, path: [])}
               end
 
               def this.=~(value)
