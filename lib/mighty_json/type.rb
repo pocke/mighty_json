@@ -10,7 +10,7 @@ module MightyJSON
 
       def compile(var:, path:)
         v = var.cur
-        err = "(raise Error.new(value: #{v}, type: #{self.to_s.inspect}, path: #{path.inspect}))" # TODO: type
+        err = "(raise Error.new(value: #{v}, type: #{self.to_s.inspect}, path: #{path.inspect}))"
         case @type
         when :ignored
           if path == []
