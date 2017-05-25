@@ -9,9 +9,10 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Masataka Kuwabara"]
   spec.email         = ["kuwabara@pocke.me"]
 
-  spec.summary       = %q{}
-  spec.description   = %q{}
+  spec.summary       = %q{A faster implementation of soutaro/strong_json}
+  spec.description   = %q{A faster implementation of soutaro/strong_json}
   spec.homepage      = "https://github.com/pocke/mighty_json"
+  spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
