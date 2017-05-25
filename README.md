@@ -4,8 +4,8 @@ A faster implementation of [soutaro/strong_json](https://github.com/soutaro/stro
 
 ## Benchmarking
 
-In complex case, MightyJSON is faster 2.8x than StrongJSON ([code](https://github.com/pocke/mighty_json/blob/master/benchmarks/large.rb)).
-In simple case, MightyJSON is faster around 2x ~ 10x than StrongJSON ([code](https://github.com/pocke/mighty_json/blob/master/benchmarks/small.rb)).
+- In complex case, MightyJSON is faster 2.8x than StrongJSON ([code](https://github.com/pocke/mighty_json/blob/master/benchmarks/large.rb)).
+- In simple case, MightyJSON is faster around 2x ~ 10x than StrongJSON ([code](https://github.com/pocke/mighty_json/blob/master/benchmarks/small.rb)).
 
 ## Installation
 
