@@ -40,7 +40,7 @@ module MightyJSON
           END
         when :numeric
           <<~END
-            #{v}.is_a?(Numeric) || (#{v}.is_a?(String) && /\A[\-\+]?[\d.]+\Z/ =~ #{v}) ?
+            #{v}.is_a?(Numeric) || (#{v}.is_a?(String) && /\\A[-+]?[\\d.]+\\Z/ =~ #{v}) ?
               #{v} :
               #{err}
           END
