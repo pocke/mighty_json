@@ -1,3 +1,4 @@
+# TODO: def to_s
 module MightyJSON
   module Type
     NONE = Object.new
@@ -8,7 +9,8 @@ module MightyJSON
       end
 
       def compile(var:, path:)
-        err = "(raise Error.new(value: #{var}, type: :number, path: #{path.inspect}))"
+        v = var.cur
+        err = "(raise Error.new(value: #{v}, type: #{self.to_s.inspect}, path: #{path.inspect}))" # TODO: type
         case @type
         when :ignored
           if path == []
@@ -17,40 +19,44 @@ module MightyJSON
             'NONE'
           end
         when :any
-          var
+          v
         when :number
           <<~END
-            #{var}.is_a?(Numeric) ?
-              #{var} :
+            #{v}.is_a?(Numeric) ?
+              #{v} :
               #{err}
           END
         when :string
           <<~END
-            #{var}.is_a?(String) ?
-              #{var} :
+            #{v}.is_a?(String) ?
+              #{v} :
               #{err}
           END
         when :boolean
           <<~END
-            #{var} == true || #{var} == false ?
-              #{var} :
+            #{v} == true || #{v} == false ?
+              #{v} :
               #{err}
           END
         when :numeric
           <<~END
-            #{var}.is_a?(Numeric) || (#{var}.is_a?(String) && /\A[\-\+]?[\d.]+\Z/ =~ #{var}) ?
-              #{var} :
+            #{v}.is_a?(Numeric) || (#{v}.is_a?(String) && /\A[\-\+]?[\d.]+\Z/ =~ #{v}) ?
+              #{v} :
               #{err}
           END
         when :symbol
           <<~END
-            #{var}.is_a?(Symbol) ?
-              #{var} :
+            #{v}.is_a?(Symbol) ?
+              #{v} :
               #{err}
           END
         else
           err
         end
+      end
+
+      def to_s
+        @type.to_s
       end
     end
 
@@ -60,8 +66,9 @@ module MightyJSON
       end
 
       def compile(var:, path:)
+        v = var.cur
         <<~END
-          if #{var}.nil? || NONE.equal?(#{var})
+          if #{v}.nil? || NONE.equal?(#{v})
             nil
           else
             #{@type.compile(var: var, path: path)}
@@ -93,14 +100,17 @@ module MightyJSON
         @type = type
       end
 
-      def coerce(value, path: [])
-        if value.is_a?(::Array)
-          value.map.with_index do |v, i|
-            @type.coerce(v, path: path+[i])
+      def compile(var:, path:)
+        v = var.cur
+        child = var.next
+        <<~END
+          begin
+            raise Error.new(path: #{path.inspect}, type: #{self.to_s.inspect}, value: #{v}) unless #{v}.is_a?(::Array)
+            #{v}.map.with_index do |#{child}, i|
+              #{@type.compile(var: var, path: path + [:array_index])} # TODO: optimize path
+            end
           end
-        else
-          raise Error.new(path: path, type: self, value: value)
-        end
+        END
       end
 
       def to_s
@@ -113,51 +123,38 @@ module MightyJSON
         @fields = fields
       end
 
-      def coerce(object, path: [])
-        unless object.is_a?(Hash)
-          raise Error.new(path: path, type: self, value: object)
-        end
+      def compile(var:, path:)
+        v = var.cur
+        keys = @fields.keys.map(&:inspect)
 
-        result = {}
+        result = var.next
+        <<~END
+          begin
+            raise Error.new(path: #{path}, type: #{self.to_s.inspect}, value: object) unless #{v}.is_a?(Hash)
 
-        object.each do |key, value|
-          unless @fields.key?(key)
-            raise UnexpectedFieldError.new(path: path + [key], value: value)
+            {}.tap do |#{result}|
+              #{v}.each do |key, value|
+                next if #{keys.map{|key| "#{key} == key"}.join('||')}
+                raise UnexpectedFieldError.new(path: #{path.inspect} + [key], value: #{v}) # TOOD: optimize path
+              end
+
+              #{
+                @fields.map do |key, type|
+                  new_var = var.next
+                  <<~END2
+                    #{new_var} = #{v}.key?(#{key.inspect}) ? #{v}[#{key.inspect}] : NONE
+                    v = #{type.compile(var: var, path: path + [key])}
+                    if !NONE.equal?(v) &&
+                       #{!NONE.equal?(type)} &&
+                       !(#{type.is_a?(Optional)} && NONE.equal?(#{new_var}))
+                      #{result}[#{key.inspect}] = v
+                    end
+                  END2
+                end.join("\n")
+              }
+            end
           end
-        end
-
-        @fields.each do |key, type|
-          value = object.key?(key) ? object[key] : NONE
-
-          test_value_type(path + [key], type, value) do |v|
-            result[key] = v
-          end
-        end
-
-        result
-      end
-
-      def test_value_type(path, type, value)
-        v = type.coerce(value, path: path)
-
-        return if NONE.equal?(v) || NONE.equal?(type)
-        return if type.is_a?(Optional) && NONE.equal?(value)
-
-        yield(v)
-      end
-
-      def merge(fields)
-        if fields.is_a?(Object)
-          fields = Object.instance_variable_get("@fields")
-        end
-
-        Object.new(@fields.merge(fields))
-      end
-
-      def except(*keys)
-        Object.new(keys.each.with_object(@fields.dup) do |key, hash|
-                     hash.delete key
-                   end)
+        END
       end
 
       def to_s
@@ -171,6 +168,7 @@ module MightyJSON
       end
     end
 
+    # TODO
     class Enum
       attr_reader :types
 

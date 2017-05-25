@@ -2,6 +2,7 @@ require "mighty_json/version"
 
 module MightyJSON
   class Builder
+    NONE = Type::NONE
     def initialize(&block)
       @lets = {}
       instance_eval(&block)
@@ -14,7 +15,7 @@ module MightyJSON
             eval <<~END
               def this.coerce(value)
                 var0 = value
-                #{type.compile(var: 'var0', path: [])}
+                #{type.compile(var: Variable.new, path: [])}
               end
             END
           end

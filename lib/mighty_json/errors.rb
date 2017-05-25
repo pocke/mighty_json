@@ -12,6 +12,7 @@ module MightyJSON
       position = path.empty? ? "" : " at .#{path.join('.')}"
       "Expected type of value #{value}#{position} is #{type}"
     end
+    alias message to_s
   end
 
   class IllegalTypeError < StandardError
@@ -24,6 +25,7 @@ module MightyJSON
     def to_s
       "#{type} can not be put on toplevel"
     end
+    alias message to_s
   end
 
   class UnexpectedFieldError < StandardError
@@ -38,5 +40,6 @@ module MightyJSON
       position = "#{path.join('.')}"
       "Unexpected field of #{position} (#{value})"
     end
+    alias message to_s
   end
 end
