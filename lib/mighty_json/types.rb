@@ -1,4 +1,4 @@
-class MightyJSON
+module MightyJSON
   module Types
     def object(fields = {})
       Type::Object.new(fields)

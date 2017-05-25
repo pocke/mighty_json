@@ -1,13 +1,11 @@
 require "mighty_json/version"
+require 'mighty_json/errors'
+require 'mighty_json/type'
+require 'mighty_json/types'
+require 'mighty_json/builder'
 
 module MightyJSON
-  def initialize(&block)
-    instance_eval(&block)
+  def self.new(&block)
+    Builder.new(&block).compile💪💪💪
   end
-
-  def let(name, type)
-    define_singleton_method(name) { type }
-  end
-
-  include MightyJSON::Types
 end
