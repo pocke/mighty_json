@@ -2,6 +2,16 @@ module MightyJSON
   module Type
     NONE = Object.new
 
+    class Eval
+      def initialize(code)
+        @code = code
+      end
+
+      def inspect
+        @code
+      end
+    end
+
     class Base
       def initialize(type)
         @type = type
@@ -105,12 +115,13 @@ module MightyJSON
 
       def compile(var:, path:)
         v = var.cur
+        idx = var.next
         child = var.next
         <<~END
           begin
             raise Error.new(path: #{path.inspect}, type: #{self.to_s.inspect}, value: #{v}) unless #{v}.is_a?(::Array)
-            #{v}.map.with_index do |#{child}, i|
-              #{@type.compile(var: var, path: path + [:array_index])}
+            #{v}.map.with_index do |#{child}, #{idx}|
+              #{@type.compile(var: var, path: path + [Eval.new(idx)])}
             end
           end
         END
