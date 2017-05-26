@@ -15,7 +15,7 @@ module MightyJSON
           if path == []
             'raise IllegalTypeError.new(type: :ignored)'
           else
-            'NONE'
+            'none'
           end
         when :any
           v
@@ -67,7 +67,7 @@ module MightyJSON
       def compile(var:, path:)
         v = var.cur
         <<~END
-          if #{v}.nil? || NONE.equal?(#{v})
+          if #{v}.nil? || none.equal?(#{v})
             nil
           else
             #{@type.compile(var: var, path: path)}
@@ -110,7 +110,7 @@ module MightyJSON
           begin
             raise Error.new(path: #{path.inspect}, type: #{self.to_s.inspect}, value: #{v}) unless #{v}.is_a?(::Array)
             #{v}.map.with_index do |#{child}, i|
-              #{@type.compile(var: var, path: path + [:array_index])} # TODO: optimize path
+              #{@type.compile(var: var, path: path + [:array_index])}
             end
           end
         END
@@ -145,11 +145,11 @@ module MightyJSON
                 @fields.map do |key, type|
                   new_var = var.next
                   <<~END2
-                    #{new_var} = #{v}.key?(#{key.inspect}) ? #{v}[#{key.inspect}] : NONE
+                    #{new_var} = #{v}.key?(#{key.inspect}) ? #{v}[#{key.inspect}] : none
                     v = #{type.compile(var: var, path: path + [key])}
-                    if !NONE.equal?(v) &&
+                    if !none.equal?(v) &&
                        #{!NONE.equal?(type)} &&
-                       !(#{type.is_a?(Optional)} && NONE.equal?(#{new_var}))
+                       !(#{type.is_a?(Optional)} && none.equal?(#{new_var}))
                       #{result}[#{key.inspect}] = v
                     end
                   END2
