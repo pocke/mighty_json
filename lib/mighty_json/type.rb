@@ -145,7 +145,7 @@ module MightyJSON
                 @fields.map do |key, type|
                   new_var = var.next
                   <<~END2
-                    #{new_var} = #{v}.key?(#{key.inspect}) ? #{v}[#{key.inspect}] : none
+                    #{new_var} = #{v}.fetch(#{key.inspect}, none)
                     v = #{type.compile(var: var, path: path + [key])}
                     if !none.equal?(v) &&
                        #{!NONE.equal?(type)} &&
