@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "mighty_json/version"
 require 'mighty_json/errors'
 require 'mighty_json/type'

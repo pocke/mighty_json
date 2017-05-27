@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module MightyJSON
   module Type
     NONE = Object.new

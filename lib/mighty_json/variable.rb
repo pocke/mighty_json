@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Variable
   def initialize
     @count = 0

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Usage:
 #   # The json is result of RuboCop in Readmine project
 #   # https://drive.google.com/file/d/0B0yU5j3W2zM9WW53b01jaWhFZHc/view?usp=sharing
