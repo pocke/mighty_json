@@ -142,16 +142,16 @@ module MightyJSON
         keys = @fields.keys.map(&:inspect)
 
         result = var.next
+
         <<~END
           begin
             raise Error.new(path: #{path}, type: #{self.to_s.inspect}, value: object) unless #{v}.is_a?(Hash)
+            #{v}.each do |key, value|
+              next if #{keys.map{|key| "#{key} == key"}.join('||')}
+              raise UnexpectedFieldError.new(path: #{path.inspect} + [key], value: #{v}) # TOOD: optimize path
+            end
 
             {}.tap do |#{result}|
-              #{v}.each do |key, value|
-                next if #{keys.map{|key| "#{key} == key"}.join('||')}
-                raise UnexpectedFieldError.new(path: #{path.inspect} + [key], value: #{v}) # TOOD: optimize path
-              end
-
               #{
                 @fields.map do |key, type|
                   new_var = var.next
