@@ -13,6 +13,8 @@ module MightyJSON
     end
 
     class Base
+      attr_reader :type
+
       def initialize(type)
         @type = type
       end
@@ -142,16 +144,20 @@ module MightyJSON
         keys = @fields.keys.map(&:inspect)
 
         result = var.next
+        is_fixed = @fields.values.none?{|type| type.is_a?(Optional) || (type.is_a?(Base) && type.type == :ignored)}
+
         <<~END
           begin
             raise Error.new(path: #{path}, type: #{self.to_s.inspect}, value: object) unless #{v}.is_a?(Hash)
 
-            {}.tap do |#{result}|
+            if #{!is_fixed} || #{@fields.size} != #{v}.size
               #{v}.each do |key, value|
                 next if #{keys.map{|key| "#{key} == key"}.join('||')}
                 raise UnexpectedFieldError.new(path: #{path.inspect} + [key], value: #{v}) # TOOD: optimize path
               end
+            end
 
+            {}.tap do |#{result}|
               #{
                 @fields.map do |key, type|
                   new_var = var.next
