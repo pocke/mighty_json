@@ -2,6 +2,9 @@
 
 A faster implementation of [soutaro/strong_json](https://github.com/soutaro/strong_json).
 
+[![Gem Version](https://badge.fury.io/rb/mighty_json.svg)](https://badge.fury.io/rb/mighty_json)
+[![Build Status](https://travis-ci.org/pocke/mighty_json.svg?branch=master)](https://travis-ci.org/pocke/mighty_json)
+
 ## Benchmarking
 
 
