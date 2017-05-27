@@ -1,0 +1,13 @@
+inherit_gem:
+  meowcop:
+    - config/rubocop.yml
+
+AllCops:
+  TargetRubyVersion: 2.3
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  style: always
+
+Style/EmptyLineAfterMagicComment:
+  Enabled: true
