@@ -18,7 +18,7 @@ module MightyJSON
             v = var.cur
             eval <<~END
               def this.coerce(#{v})
-                none = NONE
+                _none = NONE
                 #{type.compile(var: var, path: [])}
               end
 

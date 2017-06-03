@@ -29,7 +29,7 @@ module MightyJSON
           if path == []
             'raise IllegalTypeError.new(type: :ignored)'
           else
-            'none'
+            '_none'
           end
         when :any
           v
@@ -81,7 +81,7 @@ module MightyJSON
       def compile(var:, path:)
         v = var.cur
         <<~END
-          if #{v}.nil? || none.equal?(#{v})
+          if #{v}.nil? || _none.equal?(#{v})
             nil
           else
             #{@type.compile(var: var, path: path)}
@@ -150,7 +150,7 @@ module MightyJSON
 
         <<~END
           begin
-            raise Error.new(path: #{path}, type: #{self.to_s.inspect}, value: object) unless #{v}.is_a?(Hash)
+            raise Error.new(path: #{path}, type: #{self.to_s.inspect}, value: #{v}) unless #{v}.is_a?(Hash)
 
             if #{!is_fixed} || #{@fields.size} != #{v}.size
               #{v}.each do |key, value|
@@ -164,11 +164,11 @@ module MightyJSON
                 @fields.map do |key, type|
                   new_var = var.next
                   <<~END2
-                    #{new_var} = #{v}.fetch(#{key.inspect}, none)
+                    #{new_var} = #{v}.fetch(#{key.inspect}, _none)
                     v = #{type.compile(var: var, path: path + [key])}
-                    if !none.equal?(v) &&
+                    if !_none.equal?(v) &&
                        #{!NONE.equal?(type)} &&
-                       !(#{type.is_a?(Optional)} && none.equal?(#{new_var}))
+                       !(#{type.is_a?(Optional)} && _none.equal?(#{new_var}))
                       #{result}[#{key.inspect}] = v
                     end
                   END2
@@ -198,21 +198,28 @@ module MightyJSON
       end
 
       def compile(var:, path:)
-        v = var.cur
-        <<~END
-          #{@types.map do |type|
-            <<~END2.chomp
-              begin
-                #{type.compile(var: var, path: path)}
-              rescue Error, UnexpectedFieldError, IllegalTypeError
-              end
-            END2
-          end.join(' || ')} || (raise Error.new(path: #{path.inspect}, type: #{self.to_s.inspect}, value: #{v}))
-        END
+        compile_types(@types, var: var, path: path)
       end
 
       def to_s
         "enum(#{types.map(&:to_s).join(", ")})"
+      end
+
+      private
+
+      def compile_types(types, var:, path:)
+        if types.empty?
+          v = var.cur
+          return "(raise Error.new(path: #{path.inspect}, type: #{self.to_s.inspect}, value: #{v}))"
+        end
+
+        <<~END
+          begin
+            #{types.first.compile(var: var.branch, path: path)}
+          rescue Error, UnexpectedFieldError, IllegalTypeError
+            #{compile_types(types[1..-1], var: var, path: path)}
+          end
+        END
       end
     end
   end

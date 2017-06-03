@@ -13,4 +13,6 @@ class Variable
   def cur
     "var#{@count}"
   end
+
+  alias branch dup
 end
