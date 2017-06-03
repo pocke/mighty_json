@@ -52,8 +52,11 @@ module MightyJSON
               #{err}
           END
         when :numeric
+          match = RUBY_VERSION >= '2.4' ?
+            ".match?(#{v})" :
+            " =~ #{v}"
           <<~END
-            #{v}.is_a?(Numeric) || (#{v}.is_a?(String) && /\\A[-+]?[\\d.]+\\Z/ =~ #{v}) ?
+            #{v}.is_a?(Numeric) || (#{v}.is_a?(String) && /\\A[-+]?[\\d.]+\\Z/#{match}) ?
               #{v} :
               #{err}
           END
