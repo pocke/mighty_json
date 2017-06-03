@@ -145,39 +145,26 @@ module MightyJSON
       end
 
       def compile(var:, path:)
-        v = var.cur
         keys = @fields.keys.map(&:inspect)
 
-        result = var.next
+        cur = var.cur
         is_fixed = @fields.values.none?{|type| type.is_a?(Optional) || (type.is_a?(Base) && type.type == :ignored)}
 
         <<~END
           begin
-            raise Error.new(path: #{path}, type: #{self.to_s.inspect}, value: #{v}) unless #{v}.is_a?(Hash)
+            raise Error.new(path: #{path}, type: #{self.to_s.inspect}, value: #{cur}) unless #{cur}.is_a?(Hash)
 
-            #{"if #{@fields.size} != #{v}.size" if is_fixed}
-              #{v}.each do |key, value|
+            #{"if #{@fields.size} != #{cur}.size" if is_fixed}
+              #{cur}.each do |key, value|
                 next if #{keys.map{|key| "#{key} == key"}.join('||')}
-                raise UnexpectedFieldError.new(path: #{path.inspect} + [key], value: #{v}) # TOOD: optimize path
+                raise UnexpectedFieldError.new(path: #{path.inspect} + [key], value: #{cur}) # TOOD: optimize path
               end
             #{'end' if is_fixed}
 
-            {}.tap do |#{result}|
-              #{
-                @fields.map do |key, type|
-                  new_var = var.next
-                  <<~END2
-                    #{new_var} = #{v}.fetch(#{key.inspect}, _none)
-                    v = #{type.compile(var: var, path: path + [key])}
-                    if !_none.equal?(v) &&
-                       #{!NONE.equal?(type)} &&
-                       !(#{type.is_a?(Optional)} && _none.equal?(#{new_var}))
-                      #{result}[#{key.inspect}] = v
-                    end
-                  END2
-                end.join("\n")
-              }
-            end
+            #{is_fixed ?
+              compile_fixed(var: var, path: path) :
+              compile_not_fixed(var: var, path: path)
+            }
           end
         END
       end
@@ -190,6 +177,50 @@ module MightyJSON
         end
 
         "object(#{fields.join(', ')})"
+      end
+
+      private
+
+      def compile_fixed(var:, path:)
+        cur = var.cur
+        <<~END
+          {
+            #{
+              @fields.map do |key, type|
+                new_var = var.next
+                <<~END2.chomp
+                  #{key.inspect} => begin
+                    #{new_var} = #{cur}.fetch(#{key.inspect}, _none)
+                    #{type.compile(var: var, path: path + [key])}
+                  end
+                END2
+              end.join(",\n")
+            }
+          }
+        END
+      end
+
+      def compile_not_fixed(var:, path:)
+        cur = var.cur
+        result = var.next
+        <<~END
+          {}.tap do |#{result}|
+            #{
+              @fields.map do |key, type|
+                new_var = var.next
+                <<~END2
+                  #{new_var} = #{cur}.fetch(#{key.inspect}, _none)
+                  v = #{type.compile(var: var, path: path + [key])}
+                  if !_none.equal?(v) &&
+                     #{!NONE.equal?(type)} &&
+                     !(#{type.is_a?(Optional)} && _none.equal?(#{new_var}))
+                    #{result}[#{key.inspect}] = v
+                  end
+                END2
+              end.join("\n")
+            }
+          end
+        END
       end
     end
 
