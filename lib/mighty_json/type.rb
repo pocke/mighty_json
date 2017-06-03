@@ -155,12 +155,12 @@ module MightyJSON
           begin
             raise Error.new(path: #{path}, type: #{self.to_s.inspect}, value: #{v}) unless #{v}.is_a?(Hash)
 
-            if #{!is_fixed} || #{@fields.size} != #{v}.size
+            #{"if #{@fields.size} != #{v}.size" if is_fixed}
               #{v}.each do |key, value|
                 next if #{keys.map{|key| "#{key} == key"}.join('||')}
                 raise UnexpectedFieldError.new(path: #{path.inspect} + [key], value: #{v}) # TOOD: optimize path
               end
-            end
+            #{'end' if is_fixed}
 
             {}.tap do |#{result}|
               #{
